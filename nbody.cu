@@ -102,9 +102,20 @@ int main(int argc, char **argv)
 	#ifdef DEBUG
 	printSystem(stdout);
 	#endif
-	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute();
+
+	vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
+	vector3** accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
+	for(int i = 0; i < NUMENTITIES; i++) {
+		accels[i]=&values[i*NUMENTITIES];
 	}
+
+	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
+		compute(values, accels);
+	}
+
+	free(accels);
+	free(values);
+
 	clock_t t1=clock()-t0;
 #ifdef DEBUG
 	printSystem(stdout);

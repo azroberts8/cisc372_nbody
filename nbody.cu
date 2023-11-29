@@ -109,8 +109,17 @@ int main(int argc, char **argv)
 		accels[i]=&values[i*NUMENTITIES];
 	}
 
+	vector3** d_accels;
+	double* d_mass;
+	cudaMalloc(&d_accels, sizeof(vector3*)*NUMENTITIES);
+	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
+	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+	cudaMemcpy(d_accels, accels, sizeof(vector3*)*NUMENTITIES, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute(values, accels);
+		compute(accels, d_accels, d_hPos, d_mass);
 	}
 
 	free(accels);

@@ -10,7 +10,8 @@
 // represents the objects in the system.  Global variables
 vector3 *hVel, *d_hVel;
 vector3 *hPos, *d_hPos;
-double *mass;
+vector3 **accels, **d_accels;
+double *mass, *d_mass;
 
 //initHostMemory: Create storage for numObjects entities in our system
 //Parameters: numObjects: number of objects to allocate
@@ -104,13 +105,13 @@ int main(int argc, char **argv)
 	#endif
 
 	vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
-	vector3** accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
+	accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
 	for(int i = 0; i < NUMENTITIES; i++) {
 		accels[i]=&values[i*NUMENTITIES];
 	}
 
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute(values, accels);
+		compute();
 	}
 
 	free(accels);

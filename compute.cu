@@ -12,7 +12,7 @@
 //Parameters: None
 //Returns: None
 //Side Effect: Modifies the hPos and hVel arrays with the new positions and accelerations after 1 INTERVAL
-void compute(vector3* values, vector3** accels){
+void compute(){
 	//make an acceleration matrix which is NUMENTITIES squared in size;
 	int i,j,k;
 	//first compute the pairwise accelerations.  Effect is on the first argument.

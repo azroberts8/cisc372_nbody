@@ -10,6 +10,9 @@
 // represents the objects in the system.  Global variables
 vector3 *hVel, *d_hVel;
 vector3 *hPos, *d_hPos;
+vector3** h_accels;
+vector3** d_accels;
+double* d_mass;
 double *mass;
 
 //initHostMemory: Create storage for numObjects entities in our system
@@ -32,6 +35,31 @@ void freeHostMemory()
 	free(hVel);
 	free(hPos);
 	free(mass);
+}
+
+void initDeviceMemory() {
+	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
+	for(int i = 0; i < NUMENTITIES; i++) {
+		cudaMalloc(&h_accels[i], sizeof(vector3) * NUMENTITIES);
+	}
+	cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
+	cudaMemcpy(d_accels, h_accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
+	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+}
+
+void freeDeviceMemory() {
+	for(int i = 0; i < NUMENTITIES; i++) {
+		cudaFree(h_accels[i]);
+	}
+	cudaFree(d_accels);
+	cudaFree(d_hPos);
+	cudaFree(d_mass);
+	free(h_accels);
 }
 
 //planetFill: Fill the first NUMPLANETS+1 entries of the entity arrays with an estimation
@@ -99,28 +127,37 @@ int main(int argc, char **argv)
 	planetFill();
 	randomFill(NUMPLANETS + 1, NUMASTEROIDS);
 	//now we have a system.
+	printf("Bruh\n");
 	#ifdef DEBUG
 	printSystem(stdout);
 	#endif
 
-	vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
-	vector3** accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
-	for(int i = 0; i < NUMENTITIES; i++) {
-		accels[i]=&values[i*NUMENTITIES];
-	}
+	//vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
+	//vector3** accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
+	printf("Please hit this print\n");
+	fflush(stdout);
+	// for(int i = 0; i < NUMENTITIES; i++) {
+	// 	accels[i]=&values[i*NUMENTITIES];
+	// }
+
+	// start here
+
+	
+	printf("About to init memory\n");
+ 	initDeviceMemory();
 
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute(values, accels);
+		//printf("Entering loop %d", t_now);
+		compute();
 	}
 
-	free(accels);
-	free(values);
+// 	freeDeviceMemory(&h_accels, &d_accels, &d_mass);
 
-	clock_t t1=clock()-t0;
-#ifdef DEBUG
-	printSystem(stdout);
-#endif
-	printf("This took a total time of %f seconds\n",(double)t1/CLOCKS_PER_SEC);
+// 	clock_t t1=clock()-t0;
+// #ifdef DEBUG
+// 	printSystem(stdout);
+// #endif
+// 	printf("This took a total time of %f seconds\n",(double)t1/CLOCKS_PER_SEC);
 
-	freeHostMemory();
+// 	freeHostMemory();
 }

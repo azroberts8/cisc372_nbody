@@ -148,8 +148,10 @@ int main(int argc, char **argv)
 
 	initDeviceMemory();
 
+	int blocks = ceil((float)(NUMENTITIES * NUMENTITIES) / 1024);
+	int threads = ceil((float)(NUMENTITIES * NUMENTITIES) / blocks);
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute();
+		compute(blocks, threads);
 	}
 
 	freeDeviceMemory();

@@ -19,7 +19,7 @@ void compute(){
 	for (i=0;i<NUMENTITIES;i++){
 		for (j=0;j<NUMENTITIES;j++){
 			if (i==j) {
-				FILL_VECTOR(accels[i][j],0,0,0);
+				FILL_VECTOR(h_accels[i][j],0,0,0);
 			}
 			else{
 				vector3 distance;
@@ -27,7 +27,7 @@ void compute(){
 				double magnitude_sq=distance[0]*distance[0]+distance[1]*distance[1]+distance[2]*distance[2];
 				double magnitude=sqrt(magnitude_sq);
 				double accelmag=-1*GRAV_CONSTANT*mass[j]/magnitude_sq;
-				FILL_VECTOR(accels[i][j],accelmag*distance[0]/magnitude,accelmag*distance[1]/magnitude,accelmag*distance[2]/magnitude);
+				FILL_VECTOR(h_accels[i][j],accelmag*distance[0]/magnitude,accelmag*distance[1]/magnitude,accelmag*distance[2]/magnitude);
 			}
 		}
 	}
@@ -36,7 +36,7 @@ void compute(){
 		vector3 accel_sum={0,0,0};
 		for (j=0;j<NUMENTITIES;j++){
 			for (k=0;k<3;k++)
-				accel_sum[k]+=accels[i][j][k];
+				accel_sum[k]+=h_accels[i][j][k];
 		}
 		//compute the new velocity based on the acceleration and time interval
 		//compute the new position based on the velocity and time interval

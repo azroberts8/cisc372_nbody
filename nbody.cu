@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "vector.h"
 #include "config.h"
 #include "planets.h"
@@ -11,6 +13,7 @@
 vector3 *hVel, *d_hVel;
 vector3 *hPos, *d_hPos;
 vector3 **accels, **d_accels;
+vector3 **h_accels; // remove this line A0
 double *mass, *d_mass;
 
 //initHostMemory: Create storage for numObjects entities in our system
@@ -33,6 +36,39 @@ void freeHostMemory()
 	free(hVel);
 	free(hPos);
 	free(mass);
+}
+
+void initDeviceMemory() {
+	accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
+	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES); // remove this line A0
+	for(int i = 0; i < NUMENTITIES; i++) {
+		cudaMalloc(&accels[i], sizeof(vector3) * NUMENTITIES);
+		h_accels[i] = (vector3*)malloc(sizeof(vector3) * NUMENTITIES); // remove this line A0
+	}
+	cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
+	cudaMemcpy(d_accels, accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+	cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
+	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
+	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+}
+
+void freeDeviceMemory() {
+	for(int i = 0; i < NUMENTITIES; i++) {
+		cudaFree(accels[i]);
+	}
+	cudaFree(d_accels);
+	free(accels);
+
+	cudaFree(d_hVel);
+	cudaFree(d_hPos);
+	cudaFree(d_mass);
+	free(h_accels); // remove this line A0
 }
 
 //planetFill: Fill the first NUMPLANETS+1 entries of the entity arrays with an estimation
@@ -104,18 +140,19 @@ int main(int argc, char **argv)
 	printSystem(stdout);
 	#endif
 
-	vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
-	accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
-	for(int i = 0; i < NUMENTITIES; i++) {
-		accels[i]=&values[i*NUMENTITIES];
-	}
+	// vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
+	// accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
+	// for(int i = 0; i < NUMENTITIES; i++) {
+	// 	accels[i]=&values[i*NUMENTITIES];
+	// }
+
+	initDeviceMemory();
 
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute();
 	}
 
-	free(accels);
-	free(values);
+	freeDeviceMemory();
 
 	clock_t t1=clock()-t0;
 #ifdef DEBUG

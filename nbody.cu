@@ -71,6 +71,11 @@ void freeDeviceMemory() {
 	free(h_accels); // remove this line A0
 }
 
+void getDeviceMemory() {
+	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+}
+
 //planetFill: Fill the first NUMPLANETS+1 entries of the entity arrays with an estimation
 //				of our solar system (Sun+NUMPLANETS)
 //Parameters: None
@@ -153,6 +158,8 @@ int main(int argc, char **argv)
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute(blocks, threads);
 	}
+
+	getDeviceMemory();
 
 	freeDeviceMemory();
 

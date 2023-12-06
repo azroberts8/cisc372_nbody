@@ -23,6 +23,21 @@ __global__ void calcAccel(vector3** d_accels, vector3* d_hPos, double* d_mass) {
 	}
 }
 
+__global__ void sumAccels(vector3** d_accels, vector3* d_hVel, vector3* d_hPos) {
+	int i, j, k;
+	i = threadIdx.x;
+
+	vector3 accel_sum = {0, 0, 0};
+	for(j = 0; j < NUMENTITIES; j++) {
+		accel_sum[k] += d_accels[i][j][k];
+	}
+
+	for(k = 0; k < 3; k++) {
+		d_hVel[i][k] += accel_sum[k] * INTERVAL;
+		d_hPos[i][k] += d_hVel[i][k] * INTERVAL;
+	}
+}
+
 //compute: Updates the positions and locations of the objects in the system based on gravity.
 //Parameters: None
 //Returns: None
@@ -48,6 +63,9 @@ void compute(int blocks, int threads){
 	}
 
 	calcAccel<<<blocks, threads>>>(d_accels, d_hPos, d_mass);
+	cudaDeviceSynchronize();
+
+	sumAccels<<<1, NUMENTITIES>>>(d_accels, d_hVel, d_hPos);
 	cudaDeviceSynchronize();
 
 

@@ -65,17 +65,17 @@ void compute(){
 	}
 
 	calcAccel<<<1, NUMENTITIES>>>(d_accels, d_hPos, d_mass);
-	cudaDeviceSynchronize();
+	
 
-	cudaError_t err = cudaGetLastError();
+	cudaError_t err = cudaDeviceSynchronize();
 	if(cudaSuccess != err) {
 		printf("Error after calcAccel(): %s\n", cudaGetErrorString(err));
 	}
 
 	sumAccels<<<1, NUMENTITIES>>>(d_accels, d_hVel, d_hPos);
-	cudaDeviceSynchronize();
+	
 
-	err = cudaGetLastError();
+	err = cudaDeviceSynchronize();
 	if(cudaSuccess != err) {
 		printf("Error after sumAccels(): %s\n", cudaGetErrorString(err));
 	}

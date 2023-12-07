@@ -145,23 +145,13 @@ int main(int argc, char **argv)
 	printSystem(stdout);
 	#endif
 
-	// vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
-	// accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
-	// for(int i = 0; i < NUMENTITIES; i++) {
-	// 	accels[i]=&values[i*NUMENTITIES];
-	// }
-
 	initDeviceMemory();
 
-	int blocks = ceil((float)(NUMENTITIES * NUMENTITIES) / 1024);
-	int threads = ceil((float)(NUMENTITIES * NUMENTITIES) / blocks);
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute(blocks, threads);
+		compute();
 	}
 
 	getDeviceMemory();
-
-	freeDeviceMemory();
 
 	clock_t t1=clock()-t0;
 #ifdef DEBUG
@@ -169,5 +159,6 @@ int main(int argc, char **argv)
 #endif
 	printf("This took a total time of %f seconds\n",(double)t1/CLOCKS_PER_SEC);
 
+	freeDeviceMemory();
 	freeHostMemory();
 }

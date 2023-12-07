@@ -1,1 +1,1 @@
-void compute(int blocks, int threads);
+void compute();

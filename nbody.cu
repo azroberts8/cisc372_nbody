@@ -176,9 +176,10 @@ int main(int argc, char **argv)
 
 	initDeviceMemory();
 
-	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
-		compute();
-	}
+	// for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
+	// 	compute();
+	// }
+	compute();
 
 	getDeviceMemory();
 

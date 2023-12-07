@@ -23,6 +23,7 @@ __global__ void calcAccel(vector3** d_accels, vector3* d_hPos, double* d_mass) {
 			FILL_VECTOR(d_accels[i][j],accelmag*distance[0]/magnitude,accelmag*distance[1]/magnitude,accelmag*distance[2]/magnitude);
 		}
 	}
+	printf("calcAccel thread %d completed!\n", i);
 }
 
 __global__ void sumAccels(vector3** d_accels, vector3* d_hVel, vector3* d_hPos) {
@@ -38,6 +39,7 @@ __global__ void sumAccels(vector3** d_accels, vector3* d_hVel, vector3* d_hPos) 
 		d_hVel[i][k] += accel_sum[k] * INTERVAL;
 		d_hPos[i][k] += d_hVel[i][k] * INTERVAL;
 	}
+	printf("sumAccels thread %d completed!\n", i);
 }
 
 //compute: Updates the positions and locations of the objects in the system based on gravity.

@@ -6,13 +6,14 @@
 #include "vector.h"
 #include "config.h"
 
-__global__ void calcAccel(vector3** d_accels, vector3* d_hPos, double* d_mass) {
-	int i, j, k;
+__global__ void calcAccel(vector3* d_accels, vector3* d_hPos, double* d_mass) {
+	int i, j, k, ac;
 	i = threadIdx.x;
 	
 	for (j=0;j<NUMENTITIES;j++){
+		ac = (i * NUMENTITIES) + j;
 		if (i==j) {
-			FILL_VECTOR(d_accels[i][j],0,0,0);
+			FILL_VECTOR(d_accels[ac],0,0,0);
 		}
 		else{
 			vector3 distance;
@@ -20,18 +21,18 @@ __global__ void calcAccel(vector3** d_accels, vector3* d_hPos, double* d_mass) {
 			double magnitude_sq=distance[0]*distance[0]+distance[1]*distance[1]+distance[2]*distance[2];
 			double magnitude=sqrt(magnitude_sq);
 			double accelmag=-1*GRAV_CONSTANT*d_mass[j]/magnitude_sq;
-			FILL_VECTOR(d_accels[i][j],accelmag*distance[0]/magnitude,accelmag*distance[1]/magnitude,accelmag*distance[2]/magnitude);
+			FILL_VECTOR(d_accels[ac],accelmag*distance[0]/magnitude,accelmag*distance[1]/magnitude,accelmag*distance[2]/magnitude);
 		}
 	}
 }
 
-__global__ void sumAccels(vector3** d_accels, vector3* d_hVel, vector3* d_hPos) {
+__global__ void sumAccels(vector3* d_accels, vector3* d_hVel, vector3* d_hPos) {
 	int i, j, k;
 	i = threadIdx.x;
 
 	vector3 accel_sum = {0, 0, 0};
 	for(j = 0; j < NUMENTITIES; j++) {
-		accel_sum[k] += d_accels[i][j][k];
+		accel_sum[k] += d_accels[(i * NUMENTITIES) + j][k];
 	}
 
 	for(k = 0; k < 3; k++) {

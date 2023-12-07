@@ -12,7 +12,7 @@
 // represents the objects in the system.  Global variables
 vector3 *hVel, *d_hVel;
 vector3 *hPos, *d_hPos;
-vector3 **accels, **d_accels;
+vector3 **accels, *d_accels;
 vector3 **h_accels; // remove this line A0
 double *mass, *d_mass;
 
@@ -38,16 +38,11 @@ void freeHostMemory()
 	free(mass);
 }
 
-void initDeviceMemory() {
-	accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
-	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES); // remove this line A0
-	for(int i = 0; i < NUMENTITIES; i++) {
-		cudaMalloc(&accels[i], sizeof(vector3) * NUMENTITIES);
-		h_accels[i] = (vector3*)malloc(sizeof(vector3) * NUMENTITIES); // remove this line A0
-	}
-	cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
-	cudaMemcpy(d_accels, accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
 
+void initDeviceMemory() {
+	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
+	cudaMalloc(&d_accels, sizeof(vector3) * NUMENTITIES * NUMENTITIES);
+	
 	cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
 	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
 
@@ -57,6 +52,27 @@ void initDeviceMemory() {
 	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
 	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
 }
+
+
+// void initDeviceMemory() {
+// 	accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
+// 	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES); // remove this line A0
+// 	for(int i = 0; i < NUMENTITIES; i++) {
+// 		cudaMalloc(&accels[i], sizeof(vector3) * NUMENTITIES);
+// 		h_accels[i] = (vector3*)malloc(sizeof(vector3) * NUMENTITIES); // remove this line A0
+// 	}
+// 	cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
+// 	cudaMemcpy(d_accels, accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+// 	cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
+// 	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+// 	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+// 	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+
+// 	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
+// 	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+// }
 
 void freeDeviceMemory() {
 	for(int i = 0; i < NUMENTITIES; i++) {

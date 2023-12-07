@@ -39,23 +39,52 @@ void freeHostMemory()
 }
 
 void initDeviceMemory() {
+	cudaError_t err;
+
 	accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
 	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES); // remove this line A0
 	for(int i = 0; i < NUMENTITIES; i++) {
-		cudaMalloc(&accels[i], sizeof(vector3) * NUMENTITIES);
+		err = cudaMalloc(&accels[i], sizeof(vector3) * NUMENTITIES);
+		if(cudaSuccess != err) {
+			printf("Error cudaMalloc accels[%d]: %s\n", i, cudaGetErrorString(err));
+		}
 		h_accels[i] = (vector3*)malloc(sizeof(vector3) * NUMENTITIES); // remove this line A0
 	}
-	cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
-	cudaMemcpy(d_accels, accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
+	err = cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_accels: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_accels, accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy: %s\n", cudaGetErrorString(err));
+	}
 
-	cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
-	cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+	err = cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_hVel: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy d_hVel: %s\n", cudaGetErrorString(err));
+	}
 
-	cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
-	cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+	err = cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_hPos: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy d_hPos: %s\n", cudaGetErrorString(err));
+	}
 
-	cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
-	cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+	err = cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_mass: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy d_mass: %s\n", cudaGetErrorString(err));
+	}
 }
 
 void freeDeviceMemory() {

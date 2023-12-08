@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "vector.h"
 #include "config.h"
 #include "planets.h"
@@ -10,7 +12,9 @@
 // represents the objects in the system.  Global variables
 vector3 *hVel, *d_hVel;
 vector3 *hPos, *d_hPos;
-double *mass;
+vector3 **accels, **d_accels;
+vector3 **h_accels; // remove this line A0
+double *mass, *d_mass;
 
 //initHostMemory: Create storage for numObjects entities in our system
 //Parameters: numObjects: number of objects to allocate
@@ -32,6 +36,84 @@ void freeHostMemory()
 	free(hVel);
 	free(hPos);
 	free(mass);
+}
+
+void initDeviceMemory() {
+	cudaError_t err;
+
+	accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES);
+	h_accels = (vector3**)malloc(sizeof(vector3*) * NUMENTITIES); // remove this line A0
+	for(int i = 0; i < NUMENTITIES; i++) {
+		err = cudaMalloc(&accels[i], sizeof(vector3) * NUMENTITIES);
+		if(cudaSuccess != err) {
+			printf("Error cudaMalloc accels[%d]: %s\n", i, cudaGetErrorString(err));
+		}
+		h_accels[i] = (vector3*)malloc(sizeof(vector3) * NUMENTITIES); // remove this line A0
+	}
+	err = cudaMalloc(&d_accels, sizeof(vector3*) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_accels: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_accels, accels, sizeof(vector3*) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy: %s\n", cudaGetErrorString(err));
+	}
+
+	err = cudaMalloc(&d_hVel, sizeof(vector3) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_hVel: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy d_hVel: %s\n", cudaGetErrorString(err));
+	}
+
+	err = cudaMalloc(&d_hPos, sizeof(vector3) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_hPos: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy d_hPos: %s\n", cudaGetErrorString(err));
+	}
+
+	err = cudaMalloc(&d_mass, sizeof(double) * NUMENTITIES);
+	if(cudaSuccess != err) {
+		printf("Error cudaMalloc d_mass: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy d_mass: %s\n", cudaGetErrorString(err));
+	}
+
+	printf("initDeviceMemory() completed without errors\n");
+}
+
+void freeDeviceMemory() {
+	for(int i = 0; i < NUMENTITIES; i++) {
+		cudaFree(accels[i]);
+	}
+	cudaFree(d_accels);
+	free(accels);
+
+	cudaFree(d_hVel);
+	cudaFree(d_hPos);
+	cudaFree(d_mass);
+	free(h_accels); // remove this line A0
+}
+
+void getDeviceMemory() {
+	cudaError_t err;
+	err = cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy hVel D->H: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy hPos D->H: %s\n", cudaGetErrorString(err));
+	}
+	
+	printf("Completed getDeviceMemory()\n");
 }
 
 //planetFill: Fill the first NUMPLANETS+1 entries of the entity arrays with an estimation
@@ -103,12 +185,9 @@ int main(int argc, char **argv)
 	printSystem(stdout);
 	#endif
 
-	vector3* values=(vector3*)malloc(sizeof(vector3)*NUMENTITIES*NUMENTITIES);
-	vector3** accels=(vector3**)malloc(sizeof(vector3*)*NUMENTITIES);
-	for(int i = 0; i < NUMENTITIES; i++) {
-		accels[i]=&values[i*NUMENTITIES];
-	}
+	initDeviceMemory();
 
+<<<<<<< HEAD
 	vector3** d_accels;
 	double* d_mass;
 	cudaMalloc(&d_accels, sizeof(vector3*)*NUMENTITIES);
@@ -121,9 +200,14 @@ int main(int argc, char **argv)
 	for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
 		compute(accels, d_accels, d_hPos, d_mass);
 	}
+=======
+	// for (t_now=0;t_now<DURATION;t_now+=INTERVAL){
+	// 	compute();
+	// }
+	compute();
+>>>>>>> darwin-tests
 
-	free(accels);
-	free(values);
+	getDeviceMemory();
 
 	clock_t t1=clock()-t0;
 #ifdef DEBUG
@@ -131,5 +215,6 @@ int main(int argc, char **argv)
 #endif
 	printf("This took a total time of %f seconds\n",(double)t1/CLOCKS_PER_SEC);
 
+	freeDeviceMemory();
 	freeHostMemory();
 }

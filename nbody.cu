@@ -85,6 +85,8 @@ void initDeviceMemory() {
 	if(cudaSuccess != err) {
 		printf("Error cudaMemcpy d_mass: %s\n", cudaGetErrorString(err));
 	}
+
+	printf("initDeviceMemory() completed without errors\n");
 }
 
 void freeDeviceMemory() {
@@ -101,8 +103,17 @@ void freeDeviceMemory() {
 }
 
 void getDeviceMemory() {
-	cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
-	cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	cudaError_t err;
+	err = cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy hVel D->H: %s\n", cudaGetErrorString(err));
+	}
+	err = cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
+	if(cudaSuccess != err) {
+		printf("Error cudaMemcpy hPos D->H: %s\n", cudaGetErrorString(err));
+	}
+	
+	printf("Completed getDeviceMemory()\n");
 }
 
 //planetFill: Fill the first NUMPLANETS+1 entries of the entity arrays with an estimation

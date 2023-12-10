@@ -26,6 +26,7 @@ __global__ void calcAccel(vector3** d_accels, vector3* d_hPos, double* d_mass) {
 __global__ void sumAccels(vector3** d_accels, vector3* d_hVel, vector3* d_hPos) {
 	int i, j, k;
 	i = (blockIdx.x * blockDim.x) + threadIdx.x;
+	if(i >= NUMENTITIES) return;
 
 	vector3 accel_sum = {0, 0, 0};
 	for(j = 0; j < NUMENTITIES; j++) {

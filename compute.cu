@@ -7,27 +7,25 @@
 
 __global__ void calcAccel(vector3** d_accels, vector3* d_hPos, double* d_mass) {
 	int task = (blockIdx.x * blockDim.x) + threadIdx.x;
-	if(task > NUMENTITIES * NUMENTITIES) return;
+	if(task >= NUMENTITIES * NUMENTITIES) return;
 	int i = task / NUMENTITIES;
 	int j = task % NUMENTITIES;
 
-	if(!(i >= NUMENTITIES || j >= NUMENTITIES)) {
-		if(i == j) {
-			FILL_VECTOR(d_accels[i][j], 0, 0, 0);
-		} else {
-			vector3 distance;
-			for(int k = 0; k < 3; k++) distance[k] = d_hPos[i][k] - d_hPos[j][k];
-			double magnitude_sq = distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2];
-			double magnitude = sqrt(magnitude_sq);
-			double accelmag = -1 * GRAV_CONSTANT * d_mass[j] / magnitude_sq;
-			FILL_VECTOR(d_accels[i][j], accelmag * distance[0] / magnitude, accelmag * distance[1] / magnitude, accelmag * distance[2] / magnitude);
-		}
+	if(i == j) {
+		FILL_VECTOR(d_accels[i][j], 0, 0, 0);
+	} else {
+		vector3 distance;
+		for(int k = 0; k < 3; k++) distance[k] = d_hPos[i][k] - d_hPos[j][k];
+		double magnitude_sq = distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2];
+		double magnitude = sqrt(magnitude_sq);
+		double accelmag = -1 * GRAV_CONSTANT * d_mass[j] / magnitude_sq;
+		FILL_VECTOR(d_accels[i][j], accelmag * distance[0] / magnitude, accelmag * distance[1] / magnitude, accelmag * distance[2] / magnitude);
 	}
 }
 
 __global__ void sumAccels(vector3** d_accels, vector3* d_hVel, vector3* d_hPos) {
 	int i, j, k;
-	i = threadIdx.x;
+	i = (blockIdx.x * blockDim.x) + threadIdx.x;
 
 	vector3 accel_sum = {0, 0, 0};
 	for(j = 0; j < NUMENTITIES; j++) {
@@ -67,7 +65,9 @@ void compute(int blocks, int threads){
 	calcAccel<<<blocks, threads>>>(d_accels, d_hPos, d_mass);
 	cudaDeviceSynchronize();
 
-	sumAccels<<<1, NUMENTITIES>>>(d_accels, d_hVel, d_hPos);
+	blocks = ceil((float)NUMENTITIES / 1024);
+	threads = ceil((float)NUMENTITIES / blocks);
+	sumAccels<<<blocks, threads>>>(d_accels, d_hVel, d_hPos);
 	cudaDeviceSynchronize();
 
 

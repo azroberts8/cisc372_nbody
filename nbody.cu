@@ -161,13 +161,12 @@ int main(int argc, char **argv)
 
 	getDeviceMemory();
 
-	freeDeviceMemory();
-
 	clock_t t1=clock()-t0;
 #ifdef DEBUG
 	printSystem(stdout);
 #endif
 	printf("This took a total time of %f seconds\n",(double)t1/CLOCKS_PER_SEC);
 
+	freeDeviceMemory();
 	freeHostMemory();
 }
